@@ -7,12 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.emptyviews.Model.User
 import com.example.emptyviews.databinding.ActivityLoginBinding
 import com.example.emptyviews.databinding.ActivityMainBinding
 import com.google.firebase.Firebase
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.*
 import kotlin.math.log
 
 class MainActivity : AppCompatActivity() {
@@ -39,7 +42,29 @@ class MainActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(TAG, "signInWithEmail:success")
-                     //   val user = auth.currentUser
+                        val uid = FirebaseAuth.getInstance().uid ?:""
+                        val user = User(uid,binding.username.text.toString())
+                        Log.d(TAG,uid)
+                        Log.d(TAG, user.username)
+
+                        //데이터 베이스에 유저 정보를 저장한다. wirte
+                       // val db = FirebaseFirestore.getInstance()
+                        val db = Firebase.firestore
+                        db.collection("users").document(uid)
+                            .set(user)
+                            .addOnSuccessListener {
+                                Log.d(TAG,"insert Success")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.d(TAG, "insert Fail", e)
+
+                            }
+
+
+                        val intent = Intent(this,ChatListActivity::class.java)
+                        //ativity 이동시  뒤에 있는 activity는 삭제
+                        intent.flags=Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "signInWithEmail:failure", task.exception)
